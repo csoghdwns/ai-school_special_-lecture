@@ -6,16 +6,16 @@ st.title('Uber pickups in NYC')
 
 DATE_COLUMN = 'date/time'
 DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-         'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
+            'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
 # 데이터 불러오기
+@st.cache_data
 def load_data(nrows):
     data = pd.read_csv(DATA_URL, nrows=nrows)
     lowercase = lambda x: str(x).lower()
     data.rename(lowercase, axis='columns', inplace=True)
     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
     return data
-
 
 # 텍스트 요소 생성. 사용자에게 데이터가 로드 되고 있음을 알린다.
 data_load_state = st.text('Loading data...')
@@ -27,5 +27,11 @@ data = load_data(10000)
 data_load_state.text('Loading data...done!')
 
 # 부제목 만들기
-st.subheader('Raw data')
-st.write(data)
+st.subheader('Map of all pickups')
+st.map(data)
+
+# 시간별 픽업수
+st.subheader('Number of pickups by hour')
+data['hour'] = data[DATE_COLUMN].dt.hour
+pickup_counts_by_hour = data['hour'].value_counts().sort_index()
+st.bar_chart(pickup_counts_by_hour)
